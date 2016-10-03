@@ -1,6 +1,14 @@
 certificate-transparency: Auditing for TLS certificates
 =======================================================
 
+The purpose of this fork is to add certificate download funcitonality to the [Java client](https://github.com/crocs-muni/certificate-transparency/blob/master/java/src/org/certificatetransparency/ctlog/CTLogClient.java).
+
+The simplest way to build the client is to use the Intellij IDEA project in the java directory to generate a JAR.
+
+The tool outputs parts of the X.509 certificates in a format suitable for processing by our [RSA classifier tool](https://github.com/crocs-muni/classifyRSAkey).
+
+=======================================================
+
 [![Build Status](https://travis-ci.org/google/certificate-transparency.svg?branch=master)](https://travis-ci.org/google/certificate-transparency)
 
  - [Introduction](#introduction)
