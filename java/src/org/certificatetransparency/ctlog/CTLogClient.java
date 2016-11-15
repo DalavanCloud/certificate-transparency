@@ -7,6 +7,7 @@ import org.certificatetransparency.ctlog.proto.Ct;
 import org.certificatetransparency.ctlog.serialization.CryptoDataLoader;
 import org.certificatetransparency.ctlog.serialization.SerializationException;
 import org.certificatetransparency.ctlog.serialization.Serializer;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.naming.InvalidNameException;
@@ -212,6 +213,10 @@ public class CTLogClient {
   }
 
   private static String certificateToJsonString(X509Certificate cert) throws InvalidNameException {
+    return certificateToJsonString(cert, false);
+  }
+
+  private static String certificateToJsonString(X509Certificate cert, boolean oldFormat) throws InvalidNameException {
 
     if (!"RSA".equals(cert.getPublicKey().getAlgorithm())) {
       return null;
@@ -239,22 +244,33 @@ public class CTLogClient {
 
     JSONObject jsonResult = new JSONObject();
 
-    JSONObject jsonSubject = new JSONObject();
-    jsonSubject.put("common_name", cnSubject);
-    JSONObject jsonValidity = new JSONObject();
-    jsonValidity.put("start", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(cert.getNotBefore()));
-    jsonValidity.put("end", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(cert.getNotAfter()));
-    JSONObject jsonIssuer = new JSONObject();
-    jsonIssuer.put("common_name", cnIssuer);
-    JSONObject jsonRSAPublicKey = new JSONObject();
-    jsonRSAPublicKey.put("length", key.getModulus().bitLength());
-    jsonRSAPublicKey.put("modulus", Hex.toHexString(key.getModulus().toByteArray()));
-    jsonRSAPublicKey.put("exponent", key.getPublicExponent());
+    if (oldFormat) {
+      JSONObject jsonSubject = new JSONObject();
+      jsonSubject.put("common_name", cnSubject);
+      JSONObject jsonValidity = new JSONObject();
+      jsonValidity.put("start", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(cert.getNotBefore()));
+      jsonValidity.put("end", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(cert.getNotAfter()));
+      JSONObject jsonIssuer = new JSONObject();
+      jsonIssuer.put("common_name", cnIssuer);
+      JSONObject jsonRSAPublicKey = new JSONObject();
+      jsonRSAPublicKey.put("length", key.getModulus().bitLength());
+      jsonRSAPublicKey.put("modulus", Hex.toHexString(key.getModulus().toByteArray()));
+      jsonRSAPublicKey.put("exponent", key.getPublicExponent());
 
-    jsonResult.put("subject", jsonSubject);
-    jsonResult.put("validity", jsonValidity);
-    jsonResult.put("issuer", jsonIssuer);
-    jsonResult.put("rsa_public_key", jsonRSAPublicKey);
+      jsonResult.put("subject", jsonSubject);
+      jsonResult.put("validity", jsonValidity);
+      jsonResult.put("issuer", jsonIssuer);
+      jsonResult.put("rsa_public_key", jsonRSAPublicKey);
+    } else {
+      JSONArray jsonSource = new JSONArray();
+      jsonSource.add(cnSubject);
+      jsonSource.add(new SimpleDateFormat("yyyy-MM-dd").format(cert.getNotBefore()));
+
+      jsonResult.put("source", jsonSource);
+      jsonResult.put("n", String.format("0x%s", key.getModulus().toString(16)));
+      jsonResult.put("e", String.format("0x%s", key.getPublicExponent().toString(16)));
+      jsonResult.put("count", 1);
+    }
 
     return jsonResult.toString();
   }
